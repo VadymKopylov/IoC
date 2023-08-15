@@ -53,12 +53,7 @@ public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
                 StartElement startElement = xmlEvent.asStartElement();
                 if (startElement.getName().getLocalPart().equals("bean")) {
                     beanDefinition = new BeanDefinition();
-                    Attribute idAttribute = startElement.getAttributeByName(new QName("id"));
-                    Attribute classAttribute = startElement.getAttributeByName(new QName("class"));
-                    if (idAttribute != null && classAttribute != null) {
-                        beanDefinition.setId(idAttribute.getValue());
-                        beanDefinition.setClazz(classAttribute.getValue());
-                    }
+                    setIdAndClass(beanDefinition, startElement);
                 } else if (startElement.getName().getLocalPart().equals("property") && beanDefinition != null) {
                     Attribute propertyName = startElement.getAttributeByName(new QName("name"));
                     Attribute propertyRef = startElement.getAttributeByName(new QName("ref"));
@@ -72,13 +67,7 @@ public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
                             beanDefinition.getRefProperty().put(propertyName.getValue(), propertyRef.getValue());
                         }
                     } else if (propertyName != null && propertyValue != null) {
-                        if (beanDefinition.getProperty() == null) {
-                            Map<String, String> propertyMap = new HashMap<>();
-                            propertyMap.put(propertyName.getValue(), propertyValue.getValue());
-                            beanDefinition.setProperty(propertyMap);
-                        } else {
-                            beanDefinition.getProperty().put(propertyName.getValue(), propertyValue.getValue());
-                        }
+                        setBeanDefinitionProperty(beanDefinition, propertyName, propertyValue);
                     }
                 }
             }
@@ -91,5 +80,24 @@ public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
             }
         }
         return beanDefinitions;
+    }
+
+    private void setBeanDefinitionProperty(BeanDefinition beanDefinition, Attribute propertyName, Attribute propertyValue) {
+        if (beanDefinition.getProperty() == null) {
+            Map<String, String> propertyMap = new HashMap<>();
+            propertyMap.put(propertyName.getValue(), propertyValue.getValue());
+            beanDefinition.setProperty(propertyMap);
+        } else {
+            beanDefinition.getProperty().put(propertyName.getValue(), propertyValue.getValue());
+        }
+    }
+
+    private void setIdAndClass(BeanDefinition beanDefinition, StartElement startElement) {
+        Attribute idAttribute = startElement.getAttributeByName(new QName("id"));
+        Attribute classAttribute = startElement.getAttributeByName(new QName("class"));
+        if (idAttribute != null && classAttribute != null) {
+            beanDefinition.setId(idAttribute.getValue());
+            beanDefinition.setClazz(classAttribute.getValue());
+        }
     }
 }

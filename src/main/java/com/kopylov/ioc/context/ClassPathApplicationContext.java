@@ -74,13 +74,10 @@ public class ClassPathApplicationContext implements ApplicationContext {
         if (clazz == null) {
             throw new BeanInstantiationException("Bean class must not be null.");
         }
-        boolean hasDuplicates = false;
-        for (Bean bean : beans.values()) {
-            if (clazz.isInstance(bean.getValue())) {
-                hasDuplicates = true;
-            }
-        }
-        if (hasDuplicates) {
+        long classDuplicatesCount = beans.values().stream()
+                .filter(bean -> clazz.isInstance(bean.getValue()))
+                .count();
+        if (classDuplicatesCount > 1) {
             throw new NoUniqueBeanException("No unique bean : " + clazz.getName());
         }
     }

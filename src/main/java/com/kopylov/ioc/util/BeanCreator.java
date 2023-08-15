@@ -69,13 +69,7 @@ public class BeanCreator {
                         if (beans.containsKey(beanKey)) {
                             Bean beanWithRefProperty = beans.get(beanDefinitionId);
                             Bean refBean = beans.get(beanKey);
-                            try {
-                                Field declaredField = beanWithRefProperty.getValue().getClass().getDeclaredField(beanKey);
-                                declaredField.setAccessible(true);
-                                declaredField.set(beanWithRefProperty.getValue(), refBean.getValue());
-                            } catch (NoSuchFieldException | IllegalAccessException e) {
-                                throw new RuntimeException("Error setting field value " + beanKey + ".", e);
-                            }
+                            setBeanRefProperty(beanKey, beanWithRefProperty, refBean);
                         } else {
                             throw new NoSuchBeanException(beanKey);
                         }
@@ -84,6 +78,16 @@ public class BeanCreator {
             }
         }
         return beans;
+    }
+
+    private void setBeanRefProperty(String beanKey, Bean beanWithRefProperty, Bean refBean) {
+        try {
+            Field declaredField = beanWithRefProperty.getValue().getClass().getDeclaredField(beanKey);
+            declaredField.setAccessible(true);
+            declaredField.set(beanWithRefProperty.getValue(), refBean.getValue());
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException("Error setting field value " + beanKey + ".", e);
+        }
     }
 
     private void propertyReader(Bean bean, Field[] fields, Set<Map.Entry<String, String>> properties) {
@@ -106,7 +110,7 @@ public class BeanCreator {
         }
     }
 
-    private static Class<?> fieldTypeReader(String propertyName, Field[] fields) {
+    private Class<?> fieldTypeReader(String propertyName, Field[] fields) {
         Class<?> fieldType = null;
         for (Field field : fields) {
             if (field.getName().equals(propertyName)) {
@@ -116,7 +120,7 @@ public class BeanCreator {
         return fieldType;
     }
 
-    private static Object convertToType(String value, Class<?> fieldType) {
+    private Object convertToType(String value, Class<?> fieldType) {
         if (fieldType == String.class) {
             return value;
         }
