@@ -10,8 +10,8 @@ import java.util.Map;
 @Setter
 public class BeanDefinition {
 
-    private final String id;
-    private final String clazz;
+    private String id;
+    private String clazz;
     private Map<String, String> property;
     private Map<String, String> refProperty;
 
@@ -20,5 +20,8 @@ public class BeanDefinition {
         this.clazz = clazz;
         this.property = new HashMap<>();
         this.refProperty = new HashMap<>();
+    }
+
+    public BeanDefinition() {
     }
 }

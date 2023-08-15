@@ -10,5 +10,5 @@ public interface ApplicationContext {
 
     Object getBean(String name);
 
-    List<String> getBeans();
+    List<String> getBeanNames();
 }

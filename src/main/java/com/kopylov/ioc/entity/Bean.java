@@ -8,6 +8,7 @@ import lombok.Setter;
 @Getter
 @RequiredArgsConstructor
 public class Bean {
+
     private final String id;
     private final Object value;
 }

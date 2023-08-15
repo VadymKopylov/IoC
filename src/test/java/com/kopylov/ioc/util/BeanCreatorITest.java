@@ -1,6 +1,8 @@
 package com.kopylov.ioc.util;
 
 import com.kopylov.ioc.entity.*;
+import com.kopylov.ioc.exception.NoSuchBeanException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -103,5 +105,29 @@ class BeanCreatorITest {
                 hasProperty("mailService", sameInstance(actualBeans.get("mailService").getValue())));
 
         assertThat(actualBeans.get("mailService").getValue(), instanceOf(MailService.class));
+    }
+
+    @Test
+    void testFillPropertiesThrowsIllegalArgumentExceptionWhenCorrectBeanIsNotPassed(){
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            beanCreator.fillProperties(new HashMap<>(),beanDefinitions);
+        });
+    }
+    @Test
+    void testFillRefPropertiesThrowsNoSuchBeanExceptionWhenCorrectRefPropertyIsNotPassed(){
+        Assertions.assertThrows(NoSuchBeanException.class, () -> {
+            beanDefinitions.get(0).getRefProperty().clear();
+            beanDefinitions.get(0).getRefProperty().put("notExistService", "notExistService");
+            beanCreator.fillRefProperties(beans,beanDefinitions);
+        });
+    }
+
+    @Test
+    void testFillRefPropertiesThrowsNoSuchFieldExceptionWhenFieldInBeanDoesNotExist(){
+        Assertions.assertThrows(RuntimeException.class, () -> {
+            Map<String, Bean> testMap = new HashMap<>();
+            testMap.put("userService",new Bean("userService", new Object()));
+            beanCreator.fillRefProperties(testMap,beanDefinitions);
+        });
     }
 }

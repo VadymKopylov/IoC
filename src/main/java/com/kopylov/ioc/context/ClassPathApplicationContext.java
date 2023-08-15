@@ -2,7 +2,10 @@ package com.kopylov.ioc.context;
 
 import com.kopylov.ioc.entity.Bean;
 import com.kopylov.ioc.entity.BeanDefinition;
-import com.kopylov.ioc.reader.XmlBeanDefinitionReader;
+import com.kopylov.ioc.exception.BeanInstantiationException;
+import com.kopylov.ioc.exception.NoSuchBeanException;
+import com.kopylov.ioc.exception.NoUniqueBeanException;
+import com.kopylov.ioc.reader.dom.XmlBeanDefinitionReader;
 import com.kopylov.ioc.util.BeanCreator;
 
 import java.util.ArrayList;
@@ -18,23 +21,67 @@ public class ClassPathApplicationContext implements ApplicationContext {
         this.beans = new BeanCreator(beanDefinitions).createBeans();
     }
 
+    public ClassPathApplicationContext() {
+    }
+
     @Override
     public <T> T getBean(Class<T> clazz) {
+        validateClass(clazz);
+        for (Bean bean : beans.values()) {
+            if (clazz.isInstance(bean.getValue())) {
+                return clazz.cast(bean.getValue());
+            } else {
+                throw new NoSuchBeanException(clazz.getName());
+            }
+        }
         return null;
     }
 
     @Override
-    public <T> T getBean(String name, Class<T> clazz) {
+    public <T> T getBean(String id, Class<T> clazz) {
+        validateId(id);
+        validateClass(clazz);
+        Bean bean = beans.get(id);
+        if (bean != null) {
+            if (clazz.isInstance(bean.getValue())) {
+                return clazz.cast(bean.getValue());
+            }
+        }
         return null;
     }
 
     @Override
-    public Object getBean(String name) {
-        return null;
+    public Object getBean(String id) {
+        validateId(id);
+        return beans.get(id).getValue();
     }
 
-    @Override
-    public List<String> getBeans() {
+    public List<String> getBeanNames() {
         return new ArrayList<>(beans.keySet());
+    }
+
+    void setBeans(Map<String, Bean> beans) {
+        this.beans = beans;
+    }
+
+    private void validateId(String id) {
+        if (id == null || id.isEmpty()) {
+            throw new BeanInstantiationException("Bean id must not be null or empty. Id: " + id);
+        }
+    }
+
+    private void validateClass(Class<?> clazz) {
+        if (clazz == null) {
+            throw new BeanInstantiationException("Bean class must not be null.");
+        }
+        boolean hasDuplicates = false;
+        for (Bean bean : beans.values()) {
+            if (clazz.isInstance(bean.getValue())) {
+                hasDuplicates = true;
+            }
+        }
+        if (hasDuplicates) {
+            throw new NoUniqueBeanException("No unique bean : " + clazz.getName());
+        }
     }
 }

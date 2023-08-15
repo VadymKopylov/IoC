@@ -3,6 +3,7 @@ package com.kopylov.ioc.util;
 import com.kopylov.ioc.entity.Bean;
 import com.kopylov.ioc.entity.BeanDefinition;
 import com.kopylov.ioc.exception.BeanInstantiationException;
+import com.kopylov.ioc.exception.NoSuchBeanException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -23,7 +24,8 @@ public class BeanCreator {
     public Map<String, Bean> createBeans() {
         Map<String, Bean> beans = fillIdAndClass(beanDefinitions);
         beans = fillProperties(beans, beanDefinitions);
-        return fillRefProperties(beans, beanDefinitions);
+        beans = fillRefProperties(beans, beanDefinitions);
+        return beans;
     }
 
     Map<String, Bean> fillIdAndClass(List<BeanDefinition> beanDefinitions) {
@@ -47,11 +49,9 @@ public class BeanCreator {
         for (BeanDefinition beanDefinition : beanDefinitions) {
             String id = beanDefinition.getId();
             Bean bean = beans.get(id);
-
             if (bean == null) {
                 throw new IllegalArgumentException("Bean with id '" + id + "' not found.");
             }
-
             Field[] fields = bean.getValue().getClass().getDeclaredFields();
             Set<Map.Entry<String, String>> properties = beanDefinition.getProperty().entrySet();
             propertyReader(bean, fields, properties);
@@ -61,13 +61,13 @@ public class BeanCreator {
 
     Map<String, Bean> fillRefProperties(Map<String, Bean> beans, List<BeanDefinition> beanDefinitions) {
         for (BeanDefinition beanDefinition : beanDefinitions) {
-            String bean = beanDefinition.getId();
-            if (beans.containsKey(bean)) {
+            String beanDefinitionId = beanDefinition.getId();
+            if (beans.containsKey(beanDefinitionId)) {
                 if (!beanDefinition.getRefProperty().isEmpty()) {
                     for (Map.Entry<String, String> refProperty : beanDefinition.getRefProperty().entrySet()) {
                         String beanKey = refProperty.getKey();
                         if (beans.containsKey(beanKey)) {
-                            Bean beanWithRefProperty = beans.get(bean);
+                            Bean beanWithRefProperty = beans.get(beanDefinitionId);
                             Bean refBean = beans.get(beanKey);
                             try {
                                 Field declaredField = beanWithRefProperty.getValue().getClass().getDeclaredField(beanKey);
@@ -76,6 +76,8 @@ public class BeanCreator {
                             } catch (NoSuchFieldException | IllegalAccessException e) {
                                 throw new RuntimeException("Error setting field value " + beanKey + ".", e);
                             }
+                        } else {
+                            throw new NoSuchBeanException(beanKey);
                         }
                     }
                 }
@@ -84,7 +86,7 @@ public class BeanCreator {
         return beans;
     }
 
-    private static void propertyReader(Bean bean, Field[] fields, Set<Map.Entry<String, String>> properties) {
+    private void propertyReader(Bean bean, Field[] fields, Set<Map.Entry<String, String>> properties) {
         for (Map.Entry<String, String> property : properties) {
             String propertyName = property.getKey();
             String propertyValue = property.getValue();
@@ -126,6 +128,10 @@ public class BeanCreator {
             return Long.parseLong(value);
         } else if (fieldType == boolean.class || fieldType == Boolean.class) {
             return Boolean.parseBoolean(value);
+        } else if (fieldType == float.class || fieldType == Float.class) {
+            return Float.parseFloat(value);
+        } else if (fieldType == byte.class || fieldType == Byte.class) {
+            return Byte.parseByte(value);
         } else {
             throw new IllegalArgumentException("Unsupported fieldType: " + fieldType.getName());
         }

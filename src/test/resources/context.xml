@@ -3,7 +3,6 @@
         <property name="mailService" ref="mailService"/>
         <property name="paymentType" value="visa"/>
     </bean>
-
     <bean id="userService" class="com.kopylov.ioc.entity.UserService">
         <property name="mailService" ref="mailService"/>
         <property name="user" value="Vadym"/>
