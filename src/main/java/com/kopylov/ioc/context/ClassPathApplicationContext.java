@@ -27,11 +27,12 @@ public class ClassPathApplicationContext implements ApplicationContext {
     @Override
     public <T> T getBean(Class<T> clazz) {
         validateClass(clazz);
+        if(!hasBeanWithClass(clazz)){
+            throw new NoSuchBeanException(clazz.getName());
+        }
         for (Bean bean : beans.values()) {
             if (clazz.isInstance(bean.getValue())) {
                 return clazz.cast(bean.getValue());
-            } else {
-                throw new NoSuchBeanException(clazz.getName());
             }
         }
         return null;
@@ -53,6 +54,9 @@ public class ClassPathApplicationContext implements ApplicationContext {
     @Override
     public Object getBean(String id) {
         validateId(id);
+        if(!beans.containsKey(id)){
+            throw new NoSuchBeanException(id);
+        }
         return beans.get(id).getValue();
     }
 
@@ -80,5 +84,13 @@ public class ClassPathApplicationContext implements ApplicationContext {
         if (classDuplicatesCount > 1) {
             throw new NoUniqueBeanException("No unique bean : " + clazz.getName());
         }
+    }
+    private boolean hasBeanWithClass(Class<?> beanClass) {
+        for (Bean bean : beans.values()) {
+            if (bean.getValue().getClass().equals(beanClass)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

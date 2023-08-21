@@ -1,0 +1,10 @@
+<beans>
+
+    <import resource="context.xml"/>
+
+    <bean id="mailService" class="com.kopylov.ioc.entity.MailService">
+        <property name="protocol" value="POP3"/>
+        <property name="port" value="3000"/>
+    </bean>
+
+</beans>

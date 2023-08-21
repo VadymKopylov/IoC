@@ -1,9 +1,6 @@
 package com.kopylov.ioc.context;
 
-import com.kopylov.ioc.entity.Bean;
-import com.kopylov.ioc.entity.MailService;
-import com.kopylov.ioc.entity.PaymentService;
-import com.kopylov.ioc.entity.UserService;
+import com.kopylov.ioc.entity.*;
 import com.kopylov.ioc.exception.BeanInstantiationException;
 import com.kopylov.ioc.exception.NoSuchBeanException;
 import com.kopylov.ioc.exception.NoUniqueBeanException;
@@ -114,7 +111,7 @@ class ClassPathApplicationContextTest {
     void testGetBeanNamesThrowsNoUniqueBeanException(){
         Map<String, Bean> beanMap = new HashMap<>();
         beanMap.put("userServiceBean", new Bean("bean1", new UserService()));
-        beanMap.put("userServiceBean", new Bean("bean1", new UserService()));
+        beanMap.put("userServiceRepeatedBean", new Bean("bean2", new UserService()));
         classPathApplicationContext.setBeans(beanMap);
         Assertions.assertThrows(NoUniqueBeanException.class, () -> {
             classPathApplicationContext.getBean(UserService.class);
@@ -141,4 +138,23 @@ class ClassPathApplicationContextTest {
         });
     }
 
+    @Test
+    void testGetBeanNamesThrowsNoSuchBeanExceptionWhenBeanIsNotExist(){
+        Map<String, Bean> beanMap = new HashMap<>();
+        beanMap.put("userServiceBean", new Bean("bean1", new UserService()));
+        classPathApplicationContext.setBeans(beanMap);
+        Assertions.assertThrows(NoSuchBeanException.class, () -> {
+            classPathApplicationContext.getBean("mailService");
+        });
+    }
+
+    @Test
+    void testGetBeanThrowBeanInstantiationExceptionWhenInputClassIsNull(){
+        Map<String, Bean> beanMap = new HashMap<>();
+        beanMap.put("userServiceBean", new Bean("bean1", new UserService()));
+        classPathApplicationContext.setBeans(beanMap);
+        Assertions.assertThrows(BeanInstantiationException.class, () -> {
+            classPathApplicationContext.getBean((Class<Object>) null);
+        });
+    }
 }

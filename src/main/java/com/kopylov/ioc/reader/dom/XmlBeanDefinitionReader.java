@@ -31,11 +31,11 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
         List<BeanDefinition> beanDefinitions = new ArrayList<>();
         for (String path : paths) {
             try (InputStream inputStream = getClass().getResourceAsStream(path)) {
-                beanDefinitions.addAll(inputStreamBeanDefinitionReader(inputStream));
-            } catch (ParserConfigurationException e) {
+                Document document = createDocument(inputStream);
+                readImportedResources(beanDefinitions, document);
+                beanDefinitions.addAll(documentBeanDefinitionReader(document));
+            } catch (ParserConfigurationException | SAXException e) {
                 throw new BeanDefinitionReadException("Error while configuring the XML parser", e);
-            } catch (SAXException e) {
-                throw new BeanDefinitionReadException("Error while parsing the XML", e);
             } catch (IOException e) {
                 throw new BeanDefinitionReadException("I/O error occurred while reading the XML file", e);
             }
@@ -43,11 +43,17 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
         return beanDefinitions;
     }
 
-    List<BeanDefinition> inputStreamBeanDefinitionReader(InputStream inputStream)
+    Document createDocument(InputStream inputStream)
+            throws ParserConfigurationException, IOException, SAXException {
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        return builder.parse(inputStream);
+    }
+
+    List<BeanDefinition> documentBeanDefinitionReader(Document document)
             throws ParserConfigurationException, IOException, SAXException {
 
         List<BeanDefinition> beanDefinitions = new ArrayList<>();
-        NodeList beanList = getNodeList(inputStream);
+        NodeList beanList = document.getElementsByTagName("bean");
         for (int i = 0; i < beanList.getLength(); i++) {
             Node bean = beanList.item(i);
             if (bean == null || bean.getNodeType() != Node.ELEMENT_NODE) {
@@ -65,10 +71,28 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
         return beanDefinitions;
     }
 
-    NodeList getNodeList(InputStream inputStream) throws ParserConfigurationException, IOException, SAXException {
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document document = builder.parse(inputStream);
-        return document.getElementsByTagName("bean");
+    private void readImportedResources(List<BeanDefinition> beanDefinitions, Document document)
+            throws IOException, ParserConfigurationException, SAXException {
+
+        NodeList importNodes = document.getElementsByTagName("import");
+        for (int i = 0; i < importNodes.getLength(); i++) {
+            Node importNode = importNodes.item(i);
+            if (importNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element importElement = (Element) importNode;
+                String resourcePath = importElement.getAttribute("resource");
+                if (!resourcePath.startsWith("/")) {
+                    try (InputStream importedInputStream = getClass().getResourceAsStream("/context/" + resourcePath)) {
+                        Document importedDocument = createDocument(importedInputStream);
+                        beanDefinitions.addAll(documentBeanDefinitionReader(importedDocument));
+                    }
+                } else {
+                    try (InputStream importedInputStream = getClass().getResourceAsStream(resourcePath)) {
+                        Document importedDocument = createDocument(importedInputStream);
+                        beanDefinitions.addAll(documentBeanDefinitionReader(importedDocument));
+                    }
+                }
+            }
+        }
     }
 
     private BeanDefinition createBeanDefinition(Element beanElement) {

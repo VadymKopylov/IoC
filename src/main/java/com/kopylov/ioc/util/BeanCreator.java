@@ -34,7 +34,7 @@ public class BeanCreator {
             if (beanDefinition != null) {
                 String id = beanDefinition.getId();
                 try {
-                    Object object = Class.forName(beanDefinition.getClazz()).newInstance();
+                    Object object = Class.forName(beanDefinition.getClazz()).getConstructor().newInstance();
                     Bean bean = new Bean(id, object);
                     beans.put(id, bean);
                 } catch (Exception e) {
@@ -113,7 +113,7 @@ public class BeanCreator {
     private Class<?> fieldTypeReader(String propertyName, Field[] fields) {
         Class<?> fieldType = null;
         for (Field field : fields) {
-            if (field.getName().equals(propertyName)) {
+            if (field.getName().equalsIgnoreCase(propertyName)) {
                 fieldType = field.getType();
             }
         }

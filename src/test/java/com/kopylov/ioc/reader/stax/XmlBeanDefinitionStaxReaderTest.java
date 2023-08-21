@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ class XmlBeanDefinitionStaxReaderTest {
     private final XmlBeanDefinitionStaxReader xmlBeanDefinitionStaxReader = new XmlBeanDefinitionStaxReader(XML_CONTEXT);
 
     @Test
-    void testReadBeanDefinition() throws XMLStreamException {
+    void testReadBeanDefinition() throws XMLStreamException, IOException {
         List<BeanDefinition> beanDefinitionList =
                 xmlBeanDefinitionStaxReader.inputStreamBeanDefinitionReader(new ByteArrayInputStream(XML_CONTEXT.getBytes()));
 

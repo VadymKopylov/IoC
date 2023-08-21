@@ -1,7 +1,6 @@
 package com.kopylov.ioc.reader.dom;
 
 import com.kopylov.ioc.entity.BeanDefinition;
-import com.kopylov.ioc.entity.MailService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
@@ -39,8 +38,8 @@ public class XmlBeanDefinitionReaderTest {
 
     @BeforeEach
     void setUp() throws ParserConfigurationException, IOException, SAXException {
-        beanDefinitions = xmlBeanDefinitionReader.inputStreamBeanDefinitionReader(
-                new ByteArrayInputStream(XML_CONTEXT.getBytes()));
+        beanDefinitions = xmlBeanDefinitionReader.documentBeanDefinitionReader
+                (xmlBeanDefinitionReader.createDocument(new ByteArrayInputStream(XML_CONTEXT.getBytes())));
     }
 
     @Test

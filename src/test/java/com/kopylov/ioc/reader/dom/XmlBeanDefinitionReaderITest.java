@@ -3,12 +3,9 @@ package com.kopylov.ioc.reader.dom;
 import com.kopylov.ioc.entity.BeanDefinition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -18,35 +15,11 @@ class XmlBeanDefinitionReaderITest {
 
     private final String path = "/context.xml";
     private final String pathToEmailContext = "/email-context.xml";
-    private final XmlBeanDefinitionReader xmlBeanDefinitionReader = new XmlBeanDefinitionReader(path, pathToEmailContext);
+    private final XmlBeanDefinitionReader xmlBeanDefinitionReader = new XmlBeanDefinitionReader(path,pathToEmailContext);
     private final List<BeanDefinition> actualBeanDefinitions = xmlBeanDefinitionReader.readBeanDefinition();
     private final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-    @Test
-    void testGetNodeListReturnNotEmptyList() throws ParserConfigurationException, IOException, SAXException {
-        NodeList actualNodeList = xmlBeanDefinitionReader.getNodeList(getClass().getResourceAsStream(pathToEmailContext));
-        assertNotNull(actualNodeList);
-    }
 
-    @Test
-    void testGetNodeListHaveAtLeastOneNode() throws ParserConfigurationException, IOException, SAXException {
-        NodeList actualNodeList = xmlBeanDefinitionReader.getNodeList(getClass().getResourceAsStream(pathToEmailContext));
-        assertTrue(actualNodeList.getLength() > 0);
-    }
-
-    @Test
-    void testGetNodeListThrowIOExceptionWhenInvalidPathSpecified() {
-        String wrongPath = "wrong/path/to/xml.xml";
-        Assertions.assertThrows(IllegalArgumentException.class, () ->
-                xmlBeanDefinitionReader.getNodeList(getClass().getResourceAsStream(wrongPath)));
-    }
-
-    @Test
-    void testGetNodeListThrowSAXExceptionWhenBeanElementUnclosed() {
-        String wrongXml = "/wrong-context.xml";
-        Assertions.assertThrows(SAXException.class, () ->
-                xmlBeanDefinitionReader.getNodeList(getClass().getResourceAsStream(wrongXml)));
-    }
 
     //correct handling and testing of exceptions that can only occur if you change the configuration??
     @Test

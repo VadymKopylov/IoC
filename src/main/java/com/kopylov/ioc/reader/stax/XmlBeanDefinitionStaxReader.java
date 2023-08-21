@@ -3,6 +3,8 @@ package com.kopylov.ioc.reader.stax;
 import com.kopylov.ioc.entity.BeanDefinition;
 import com.kopylov.ioc.exception.BeanDefinitionReadException;
 import com.kopylov.ioc.reader.BeanDefinitionReader;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -43,7 +45,7 @@ public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
         return beanDefinitions;
     }
 
-    List<BeanDefinition> inputStreamBeanDefinitionReader(InputStream inputStream) throws XMLStreamException {
+    List<BeanDefinition> inputStreamBeanDefinitionReader(InputStream inputStream) throws XMLStreamException, IOException {
         List<BeanDefinition> beanDefinitions = new ArrayList<>();
         BeanDefinition beanDefinition = null;
         XMLEventReader reader = xmlInputFactory.createXMLEventReader(inputStream);
@@ -51,24 +53,12 @@ public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
             XMLEvent xmlEvent = reader.nextEvent();
             if (xmlEvent.isStartElement()) {
                 StartElement startElement = xmlEvent.asStartElement();
+                readImportResources(beanDefinitions, startElement);
                 if (startElement.getName().getLocalPart().equals("bean")) {
                     beanDefinition = new BeanDefinition();
                     setIdAndClass(beanDefinition, startElement);
                 } else if (startElement.getName().getLocalPart().equals("property") && beanDefinition != null) {
-                    Attribute propertyName = startElement.getAttributeByName(new QName("name"));
-                    Attribute propertyRef = startElement.getAttributeByName(new QName("ref"));
-                    Attribute propertyValue = startElement.getAttributeByName(new QName("value"));
-                    if (propertyName != null && propertyRef != null) {
-                        if (beanDefinition.getRefProperty() == null) {
-                            Map<String, String> refPropertyMap = new HashMap<>();
-                            refPropertyMap.put(propertyName.getValue(), propertyRef.getValue());
-                            beanDefinition.setRefProperty(refPropertyMap);
-                        } else {
-                            beanDefinition.getRefProperty().put(propertyName.getValue(), propertyRef.getValue());
-                        }
-                    } else if (propertyName != null && propertyValue != null) {
-                        setBeanDefinitionProperty(beanDefinition, propertyName, propertyValue);
-                    }
+                    setBeanDefinitionProperty(beanDefinition, startElement);
                 }
             }
             if (xmlEvent.isEndElement()) {
@@ -82,7 +72,50 @@ public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
         return beanDefinitions;
     }
 
-    private void setBeanDefinitionProperty(BeanDefinition beanDefinition, Attribute propertyName, Attribute propertyValue) {
+    private void readImportResources(List<BeanDefinition> beanDefinitions, StartElement startElement) throws IOException, XMLStreamException {
+        if (startElement.getName().getLocalPart().equals("import")) {
+            Attribute resourceAttribute = startElement.getAttributeByName(new QName("resource"));
+            if (resourceAttribute != null) {
+                String resourcePath = resourceAttribute.getValue();
+                if (!resourcePath.startsWith("/")) {
+                    try (InputStream importedInputStream = getClass().getResourceAsStream("/" + resourcePath)) {
+                        if (importedInputStream != null) {
+                            beanDefinitions.addAll(inputStreamBeanDefinitionReader(importedInputStream));
+                        }
+                    }
+                } else {
+                    try (InputStream importedInputStream = getClass().getResourceAsStream(resourcePath)) {
+                        if (importedInputStream != null) {
+                            beanDefinitions.addAll(inputStreamBeanDefinitionReader(importedInputStream));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void setBeanDefinitionProperty(BeanDefinition beanDefinition, StartElement startElement) {
+        Attribute propertyName = startElement.getAttributeByName(new QName("name"));
+        Attribute propertyRef = startElement.getAttributeByName(new QName("ref"));
+        Attribute propertyValue = startElement.getAttributeByName(new QName("value"));
+        if (propertyName != null && propertyRef != null) {
+            setRefProperty(beanDefinition, propertyName, propertyRef);
+        } else if (propertyName != null && propertyValue != null) {
+            setProperty(beanDefinition, propertyName, propertyValue);
+        }
+    }
+
+    private void setRefProperty(BeanDefinition beanDefinition, Attribute propertyName, Attribute propertyRef) {
+        if (beanDefinition.getRefProperty() == null) {
+            Map<String, String> refPropertyMap = new HashMap<>();
+            refPropertyMap.put(propertyName.getValue(), propertyRef.getValue());
+            beanDefinition.setRefProperty(refPropertyMap);
+        } else {
+            beanDefinition.getRefProperty().put(propertyName.getValue(), propertyRef.getValue());
+        }
+    }
+
+    private void setProperty(BeanDefinition beanDefinition, Attribute propertyName, Attribute propertyValue) {
         if (beanDefinition.getProperty() == null) {
             Map<String, String> propertyMap = new HashMap<>();
             propertyMap.put(propertyName.getValue(), propertyValue.getValue());
