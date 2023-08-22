@@ -34,10 +34,12 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
                 Document document = createDocument(inputStream);
                 readImportedResources(beanDefinitions, document);
                 beanDefinitions.addAll(documentBeanDefinitionReader(document));
-            } catch (ParserConfigurationException | SAXException e) {
+            } catch (ParserConfigurationException e) {
                 throw new BeanDefinitionReadException("Error while configuring the XML parser", e);
             } catch (IOException e) {
                 throw new BeanDefinitionReadException("I/O error occurred while reading the XML file", e);
+            } catch (SAXException e) {
+                throw new BeanDefinitionReadException("Error while reading the XML file ", e);
             }
         }
         return beanDefinitions;
@@ -45,13 +47,12 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
 
     Document createDocument(InputStream inputStream)
             throws ParserConfigurationException, IOException, SAXException {
+
         DocumentBuilder builder = factory.newDocumentBuilder();
         return builder.parse(inputStream);
     }
 
-    List<BeanDefinition> documentBeanDefinitionReader(Document document)
-            throws ParserConfigurationException, IOException, SAXException {
-
+    List<BeanDefinition> documentBeanDefinitionReader(Document document) {
         List<BeanDefinition> beanDefinitions = new ArrayList<>();
         NodeList beanList = document.getElementsByTagName("bean");
         for (int i = 0; i < beanList.getLength(); i++) {
@@ -86,7 +87,7 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
                         beanDefinitions.addAll(documentBeanDefinitionReader(importedDocument));
                     }
                 } else {
-                    try (InputStream importedInputStream = getClass().getResourceAsStream(resourcePath)) {
+                    try (InputStream importedInputStream = getClass().getResourceAsStream("/context" + resourcePath)) {
                         Document importedDocument = createDocument(importedInputStream);
                         beanDefinitions.addAll(documentBeanDefinitionReader(importedDocument));
                     }

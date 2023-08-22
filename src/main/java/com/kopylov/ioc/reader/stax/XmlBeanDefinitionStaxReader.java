@@ -78,13 +78,13 @@ public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
             if (resourceAttribute != null) {
                 String resourcePath = resourceAttribute.getValue();
                 if (!resourcePath.startsWith("/")) {
-                    try (InputStream importedInputStream = getClass().getResourceAsStream("/" + resourcePath)) {
+                    try (InputStream importedInputStream = getClass().getResourceAsStream("/context/" + resourcePath)) {
                         if (importedInputStream != null) {
                             beanDefinitions.addAll(inputStreamBeanDefinitionReader(importedInputStream));
                         }
                     }
                 } else {
-                    try (InputStream importedInputStream = getClass().getResourceAsStream(resourcePath)) {
+                    try (InputStream importedInputStream = getClass().getResourceAsStream("/context" + resourcePath)) {
                         if (importedInputStream != null) {
                             beanDefinitions.addAll(inputStreamBeanDefinitionReader(importedInputStream));
                         }
