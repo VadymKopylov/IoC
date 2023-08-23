@@ -3,6 +3,7 @@ package com.kopylov.ioc.reader.dom;
 import com.kopylov.ioc.entity.BeanDefinition;
 import com.kopylov.ioc.exception.BeanDefinitionReadException;
 import com.kopylov.ioc.reader.BeanDefinitionReader;
+import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class XmlBeanDefinitionReader implements BeanDefinitionReader {
 
     private final String[] paths;
@@ -35,10 +37,13 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
                 readImportedResources(beanDefinitions, document);
                 beanDefinitions.addAll(documentBeanDefinitionReader(document));
             } catch (ParserConfigurationException e) {
+                log.error("Error while configuring the XML parser", e);
                 throw new BeanDefinitionReadException("Error while configuring the XML parser", e);
             } catch (IOException e) {
+                log.error("I/O error occurred while reading the XML file", e);
                 throw new BeanDefinitionReadException("I/O error occurred while reading the XML file", e);
             } catch (SAXException e) {
+                log.error("Error while reading the XML file", e);
                 throw new BeanDefinitionReadException("Error while reading the XML file ", e);
             }
         }
@@ -58,6 +63,7 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
         for (int i = 0; i < beanList.getLength(); i++) {
             Node bean = beanList.item(i);
             if (bean == null || bean.getNodeType() != Node.ELEMENT_NODE) {
+                log.error("Bean is not an Element node or is null");
                 throw new IllegalArgumentException("Invalid bean node");
             }
             Element beanElement = (Element) bean;
@@ -100,6 +106,7 @@ public class XmlBeanDefinitionReader implements BeanDefinitionReader {
         String id = beanElement.getAttribute("id");
         String clazz = beanElement.getAttribute("class");
         if (id.isEmpty() || clazz.isEmpty()) {
+            log.error("Error while reading attribute of Element");
             throw new IllegalArgumentException("Bean attributes 'id' and 'class' must not be empty");
         }
         return new BeanDefinition(id, clazz);

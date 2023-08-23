@@ -4,6 +4,7 @@ import com.kopylov.ioc.entity.Bean;
 import com.kopylov.ioc.entity.BeanDefinition;
 import com.kopylov.ioc.exception.BeanInstantiationException;
 import com.kopylov.ioc.exception.NoSuchBeanException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Slf4j
 public class BeanCreator {
 
     private final List<BeanDefinition> beanDefinitions;
@@ -38,6 +40,7 @@ public class BeanCreator {
                     Bean bean = new Bean(id, object);
                     beans.put(id, bean);
                 } catch (Exception e) {
+                    log.error("Failed to create Bean from BeanDefinition: {}" + id, e);
                     throw new BeanInstantiationException("Error with create Bean from BeanDefinition", e);
                 }
             }
@@ -50,6 +53,7 @@ public class BeanCreator {
             String id = beanDefinition.getId();
             Bean bean = beans.get(id);
             if (bean == null) {
+                log.error("Can't find Bean with id: {}" + id);
                 throw new IllegalArgumentException("Bean with id '" + id + "' not found.");
             }
             Field[] fields = bean.getValue().getClass().getDeclaredFields();
@@ -71,6 +75,7 @@ public class BeanCreator {
                             Bean refBean = beans.get(beanKey);
                             setBeanRefProperty(beanKey, beanWithRefProperty, refBean);
                         } else {
+                            log.error("No such Bean with key: {} in map" + beanKey);
                             throw new NoSuchBeanException(beanKey);
                         }
                     }
@@ -86,6 +91,7 @@ public class BeanCreator {
             declaredField.setAccessible(true);
             declaredField.set(beanWithRefProperty.getValue(), refBean.getValue());
         } catch (NoSuchFieldException | IllegalAccessException e) {
+            log.error("Error when trying to add ref properties for Bean with key: {}" + beanKey, e);
             throw new RuntimeException("Error setting field value " + beanKey + ".", e);
         }
     }
@@ -101,9 +107,11 @@ public class BeanCreator {
                 Object convertedField = convertToType(propertyValue, fieldType);
                 setMethod.invoke(bean.getValue(), convertedField);
             } catch (NoSuchMethodException e) {
+                log.error("No such method:{} for property: {}", setMethodName, propertyName, e);
                 throw new IllegalArgumentException("Set method " + setMethodName +
                         " not found for property " + propertyName + ".");
             } catch (IllegalAccessException | InvocationTargetException e) {
+                log.error("Error during property with name: {} setting for Bean: {}" + propertyName, bean.getId(), e);
                 throw new RuntimeException("Error setting property " + propertyName +
                         " for bean " + bean.getId() + ".", e);
             }
@@ -137,6 +145,7 @@ public class BeanCreator {
         } else if (fieldType == byte.class || fieldType == Byte.class) {
             return Byte.parseByte(value);
         } else {
+            log.error("Unsupported filedType: {}" + fieldType.getName());
             throw new IllegalArgumentException("Unsupported fieldType: " + fieldType.getName());
         }
     }

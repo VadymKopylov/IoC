@@ -15,6 +15,7 @@
         <junit-jupiter.version>5.9.2</junit-jupiter.version>
         <mockito-core.version>5.3.0</mockito-core.version>
         <maven-source-plugin.verison>3.3.0</maven-source-plugin.verison>
+        <logback-classic.version>1.4.7</logback-classic.version>
     </properties>
 
     <build>
@@ -41,6 +42,11 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback-classic.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

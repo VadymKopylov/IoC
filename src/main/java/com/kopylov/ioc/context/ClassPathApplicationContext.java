@@ -7,11 +7,13 @@ import com.kopylov.ioc.exception.NoSuchBeanException;
 import com.kopylov.ioc.exception.NoUniqueBeanException;
 import com.kopylov.ioc.reader.dom.XmlBeanDefinitionReader;
 import com.kopylov.ioc.util.BeanCreator;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class ClassPathApplicationContext implements ApplicationContext {
 
     private Map<String, Bean> beans;
@@ -27,7 +29,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
     @Override
     public <T> T getBean(Class<T> clazz) {
         validateClass(clazz);
-        if(!hasBeanWithClass(clazz)){
+        if (!hasBeanWithClass(clazz)) {
             throw new NoSuchBeanException(clazz.getName());
         }
         for (Bean bean : beans.values()) {
@@ -54,7 +56,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
     @Override
     public Object getBean(String id) {
         validateId(id);
-        if(!beans.containsKey(id)){
+        if (!beans.containsKey(id)) {
             throw new NoSuchBeanException(id);
         }
         return beans.get(id).getValue();
@@ -70,21 +72,25 @@ public class ClassPathApplicationContext implements ApplicationContext {
 
     private void validateId(String id) {
         if (id == null || id.isEmpty()) {
+            log.error("Incorrect id entered: {}" + id);
             throw new BeanInstantiationException("Bean id must not be null or empty. Id: " + id);
         }
     }
 
     private void validateClass(Class<?> clazz) {
         if (clazz == null) {
+            log.error("Null class value entered");
             throw new BeanInstantiationException("Bean class must not be null.");
         }
         long classDuplicatesCount = beans.values().stream()
                 .filter(bean -> clazz.isInstance(bean.getValue()))
                 .count();
         if (classDuplicatesCount > 1) {
+            log.error("Bean has duplicates: {}" + clazz.getName());
             throw new NoUniqueBeanException("No unique bean : " + clazz.getName());
         }
     }
+
     private boolean hasBeanWithClass(Class<?> beanClass) {
         for (Bean bean : beans.values()) {
             if (bean.getValue().getClass().equals(beanClass)) {

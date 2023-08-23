@@ -3,8 +3,7 @@ package com.kopylov.ioc.reader.stax;
 import com.kopylov.ioc.entity.BeanDefinition;
 import com.kopylov.ioc.exception.BeanDefinitionReadException;
 import com.kopylov.ioc.reader.BeanDefinitionReader;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -21,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
 
     private final String[] paths;
@@ -37,8 +37,10 @@ public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
             try (InputStream inputStream = getClass().getResourceAsStream(path)) {
                 beanDefinitions.addAll(inputStreamBeanDefinitionReader(inputStream));
             } catch (IOException e) {
+                log.error("I/O error occurred while reading the XML file", e);
                 throw new BeanDefinitionReadException("I/O error occurred while reading the XML file", e);
             } catch (XMLStreamException e) {
+                log.error("Error while parsing the XML" + e);
                 throw new BeanDefinitionReadException("Error while parsing the XML", e);
             }
         }
