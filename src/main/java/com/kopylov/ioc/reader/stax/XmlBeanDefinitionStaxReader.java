@@ -60,7 +60,7 @@ public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
                     beanDefinition = new BeanDefinition();
                     setIdAndClass(beanDefinition, startElement);
                 } else if (startElement.getName().getLocalPart().equals("property") && beanDefinition != null) {
-                    setBeanDefinitionProperty(beanDefinition, startElement);
+                    beanDefinitionPropertySetter(beanDefinition, startElement);
                 }
             }
             if (xmlEvent.isEndElement()) {
@@ -96,7 +96,7 @@ public class XmlBeanDefinitionStaxReader implements BeanDefinitionReader {
         }
     }
 
-    private void setBeanDefinitionProperty(BeanDefinition beanDefinition, StartElement startElement) {
+    private void beanDefinitionPropertySetter(BeanDefinition beanDefinition, StartElement startElement) {
         Attribute propertyName = startElement.getAttributeByName(new QName("name"));
         Attribute propertyRef = startElement.getAttributeByName(new QName("ref"));
         Attribute propertyValue = startElement.getAttributeByName(new QName("value"));

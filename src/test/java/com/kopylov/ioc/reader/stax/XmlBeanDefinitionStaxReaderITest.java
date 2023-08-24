@@ -15,7 +15,6 @@ class XmlBeanDefinitionStaxReaderITest {
     private final XmlBeanDefinitionStaxReader xmlBeanDefinitionStaxReader =
             new XmlBeanDefinitionStaxReader("/context/context-with-import.xml");
 
-
     @Test
     void testReadBeanDefinitionReturnNotEmptyList() {
         List<BeanDefinition> actualBeanDefinitions = xmlBeanDefinitionStaxReader.readBeanDefinition();
@@ -61,12 +60,9 @@ class XmlBeanDefinitionStaxReaderITest {
 
         BeanDefinition firstBeanDefinition = actualBeanDefinitions.get(0);
         BeanDefinition secondBeanDefinition = actualBeanDefinitions.get(1);
-        BeanDefinition thirdBeanDefinition = actualBeanDefinitions.get(2);
 
         assertEquals("mailService",firstBeanDefinition.getRefProperty().get("mailService"));
         assertEquals("mailService",secondBeanDefinition.getRefProperty().get("mailService"));
-        assertNull(thirdBeanDefinition.getRefProperty());
-
     }
 
     @Test

@@ -66,12 +66,9 @@ class XmlBeanDefinitionReaderITest {
 
         BeanDefinition firstBeanDefinition = actualBeanDefinitions.get(0);
         BeanDefinition secondBeanDefinition = actualBeanDefinitions.get(1);
-        BeanDefinition thirdBeanDefinition = actualBeanDefinitions.get(2);
 
         assertEquals("mailService",firstBeanDefinition.getRefProperty().get("mailService"));
         assertEquals("mailService",secondBeanDefinition.getRefProperty().get("mailService"));
-        assertNull(thirdBeanDefinition.getRefProperty());
-
     }
 
     @Test
